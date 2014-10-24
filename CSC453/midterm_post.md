@@ -45,18 +45,8 @@ For the purposes of this tutorial, we are just interested in how this **"add"** 
           if (x != NULL) continue;
           break;
   ```
-  The first thing we need to know is what the CheckExact functions do. It turns out that they are just a Python's compiler type checking functions. In this case, the compiler first tries to do the integer *PyInt_CheckExact* and then if it fails, it tries to do something else and the next attempt is to see if the arguments are string types, which they are in our example:
-
->  v = 'ing'
->  w = 'str'
-  
-  when the compiler enters this if statement it calls the **string_concatenate**
-function which is located in *ceval.c*. The arguments passed to this function
-are basically the operands and references to the next instruction as it will
-save the concatenation result somewhere indicated by the next *opcode + arg*.
-In our case the next opcode is *STORE_NAME* which means that the return value 
-will be stored in some variable but we don't need to worry about this right
-now.
+In this case, the compiler first tries to do the integer `+` checking the type with `PyInt_CheckExact` and then if it fails, it tries to do something else and the next attempt is to see if the arguments are string types, which is true in our example. The thing to notice here is that BINARY_ADD is actually executing just one *relevant* line of code in which it calls `string_concatenate`. The parameters `f`and `next_instr` are passed because this called functions needs to access the variables inside the current frame as well as its next instruction (for some optimizations reasons and to get the destination variable where it will store the resulting concatenated string).
+When the compiler enters this if statement it calls the **string_concatenate** function which is located in *ceval.c*. The arguments passed to this function are basically the operands and references to the next instruction as it will save the concatenation result somewhere indicated by the next *opcode + arg*. In our case the next opcode is *STORE_NAME* which means that the return value will be stored in some variable but we don't need to worry about this right now.
 
 ```C
 static PyObject *
