@@ -1,9 +1,6 @@
 ## Concatenating two strings together with the '+' operator
 
-  The goal of this tutorial is to show how the Python compiler (CPython)
-implements the '+' operator as string concatenation. In order to show that,
-we will trace the execution of the the following python code through the main
-loop of the compiler:
+  The goal of this tutorial is to show how the Python compiler (CPython) implements the '+' operator as string concatenation. In order to show that, we will trace the execution of the the following python code through the main loop of the compiler:
 ```python
 a = 'str'
 b = 'ing'
@@ -25,49 +22,30 @@ and its respective byte-code:
 ```
 The code execution is a simple: it **adds** two variables `a` e `b` each one containing strings (`'str'` and `'ing'`) and as result of this operation it generates a new concatenated string `'string'` and storing in `c`.
 
-For the purposes of this tutorial, we are interested in finding out what this **"add"** operation is executed. In the byte-code it is represented by the *byte offset 18* containing the opcode `BINARY_ADD`. If you are familiar to Python's compiler you know that `BINARY_ADD` is called anytime the `+` operator appears in your code. 
+For the purposes of this tutorial, we are just interested in how this **"add"** operation is executed by CPython. In the byte-code this operation is represented by the *byte offset 18* containing the opcode `BINARY_ADD`. If you are familiar to Python's compiler you know that `BINARY_ADD` is called anytime the `+` operator appears in your code. 
 
 *** we will ignore all the reference counter increasing / decreasing stuff as well as all debugging and exception handling not relevant to the main execution of `+`. Also, we will not go over all the optimizations the compiler does because they are relevant in our example - which is very basic.***
 
-  The algorithm used to implement *BINARY_ADD* looks like this:
+  The definition of *BINARY_ADD* is inside *ceval.c*. Here is a **simplified** version of it that will help us to understand what it does:
 ```C
-         case BINARY_ADD:
-            w = POP();
-            v = TOP();
-            if (PyInt_CheckExact(v) && PyInt_CheckExact(w)) {
-                /* INLINE: int + int */
-                register long a, b, i;
-                a = PyInt_AS_LONG(v);
-                b = PyInt_AS_LONG(w);
-                /* cast to avoid undefined behaviour
-                   on overflow */
-                i = (long)((unsigned long)a + b);
-                if ((i^a) < 0 && (i^b) < 0)
-                    goto slow_add;
-                x = PyInt_FromLong(i);
-            }
-            else if (PyString_CheckExact(v) &&
-                     PyString_CheckExact(w)) {
-                x = string_concatenate(v, w, f, next_instr);
-                /* string_concatenate consumed the ref to v */
-                goto skip_decref_vx;
-            }
-            else {
-              slow_add:
-                x = PyNumber_Add(v, w);
-            }
-            Py_DECREF(v);
-          skip_decref_vx:
-            Py_DECREF(w);
-            SET_TOP(x);
-            if (x != NULL) continue;
-            break;
+       case BINARY_ADD:
+          w = POP();
+          v = TOP();
+          if (PyInt_CheckExact(v) && PyInt_CheckExact(w)) {
+          ...
+          /* CODE EXECUTED IF the operands are Integers*/
+          ...
+          }
+          else if (PyString_CheckExact(v) && PyString_CheckExact(w)) {
+              x = string_concatenate(v, w, f, next_instr);
+              ...
+          }
+          ...
+          SET_TOP(x);
+          if (x != NULL) continue;
+          break;
   ```
-  The first thing we need to know is what the CheckExact functions do. It turns
-out that they are just a Python's compiler type checking functions. In this 
-case, the compiler first tries to do the integer *PyInt_CheckExact* and then
-if it fails, it tries to do something else and the next attempt is to see if
-the arguments are string types, which they are in our example:
+  The first thing we need to know is what the CheckExact functions do. It turns out that they are just a Python's compiler type checking functions. In this case, the compiler first tries to do the integer *PyInt_CheckExact* and then if it fails, it tries to do something else and the next attempt is to see if the arguments are string types, which they are in our example:
 
 >  v = 'ing'
 >  w = 'str'
