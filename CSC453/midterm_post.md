@@ -1,6 +1,6 @@
 ## Concatenating two strings together with the '+' operator
 
-  The goal of this tutorial is to show how the Python compiler (CPython) implements the '+' operator as string concatenation. In order to show that, we will trace the execution of the the following python code through the main loop of the compiler inside `ceval.c`:
+  The goal of this tutorial is to show how the Python compiler (CPython) implements the `+` operator as string concatenation. In order to show that, we will trace the execution of the the following python code through the main loop of the compiler inside `ceval.c`:
 ```python
 a = 'str'
 b = 'ing'
@@ -93,12 +93,12 @@ The compiler then executes the next lines which are the ones mentioned above but
 Allocates sufficient memory to store the resulting PyObject:  ( standard PyString size (header)  + `size` calculated above). This memory is allocated to the `op` object which in turn will be the returning PyString object.
 
 2. `Py_MEMCPY(op->ob_sval, a->ob_sval, Py_SIZE(a))`
-`Py_MEMCPY` is a macro that calls the `memcpy` C function. We can find its definition in the `pyport.h` file. The arguments passed to this macro are: `Py_MEMCPY(_target,source,length_)`. So, this line is basically saying that it will copy `Py_SIZE(a)` characters from the value of `a` (which is the actual C string inside the `sval` field of the object) to the new object's `sval`.
+`Py_MEMCPY` is a macro that calls the `memcpy` C function. We can find its definition in the `pyport.h` file. The arguments passed to this macro are: `Py_MEMCPY(_target,source,length_)`. So, this line is basically saying that it will copy `Py_SIZE(a)` characters from the value of `a` (which is the actual C string inside the `a->sval`) to the new object `op->sval`.
 
 3. `Py_MEMCPY(op->ob_sval + Py_SIZE(a), b->ob_sval,Py_SIZE(b)) `
-The same occurs here with a slightly difference as it needs to start to copy the characters from `b` to `op->sval` starting after the last character already copied on the previous step, i.e., it copies `Py_SIZE(b)` bytes to the offset starting in `op->sval + Py_Size(a)` position.
+The same macro is executed here but with different arguments as it needs to start copying the characters from `b->sval` to `op->sval` just after the last character already copied on the previous step, i.e., it needs to copy `Py_SIZE(b)` bytes to `op->sval` starting on the byte offset indicated by `op->sval + Py_Size(a)`.
 
 4. `op->ob_sval[size] = '\0'`
-At this point the string concatenation is already finished but, as we all know, in the end it's all C under the hood so we need to follow the some C conventions sometimes. In this case, put the `'\0'` character to indicate that the string ends here so the C string value can be used by the compiler as a regular string.
+At this point the string concatenation is already finished. `op->sval` has the `"string"` value but, as we all know, in the end it's all C under the hood. When we work with C strings we need to follow the C conventions. In this case, putting the `'\0'` character to indicate that the string ends here so that the compiler can use this value as a regular C string.
 
 The new object `op` is then returned to the caller and the compiler eventually gets back to `ceval.c` returning the new string and storing it in `c` as indicated in our python source code.
