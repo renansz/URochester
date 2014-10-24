@@ -271,7 +271,12 @@ Following the sequence the compiler is:
 Allocating memory of sufficient size to store the resulting PyObject  - standard PyString size (header)  + calculated **size** of the two strings. This memory is allocated to **op** which in turn will be the resulting string.
 
 2. `Py_MEMCPY(op->ob_sval, a->ob_sval, Py_SIZE(a)) `
+Py_MEMCPY is a macro that calls the **memcpy** C function. We can find its definition in the *pyport.h* file to see what the arguments are: **Py_MEMCPY(target,source,length)**. So, this line is basically saying that it will copy Py_SIZE(a) characters from the value of **a** (which is the actual C string inside the *sval* field of the object) to the new object's *sval*.
 
 3. `Py_MEMCPY(op->ob_sval + Py_SIZE(a), b->ob_sval,Py_SIZE(b)) `
+The same occurs here with a slightly difference as it needs to start to copy the characters from **b** to *op->sval* starting after the last character already copied on the previous step, i.e., it starts copyting to the offset *op->sval + Py_Size(a)* and copy *Py_SIZE(b)* bytes to the new object.
 
 4. `op->ob_sval[size] = '\0'`
+At this point the string concatenation is already finished but, as we all know, in the end it's all C under the hood so we need to follow the C convention and put the `'\0'` character to indicate that the string ends here so the C string value can be used by the compiler as a regular string.
+
+The new object *op* is then returned to the caller and the compiler eventually gets back to ceval.c returning the new string and storing it in **c** as indicated in our python source code.
