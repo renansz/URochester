@@ -20,13 +20,13 @@ and its respective byte-code:
            19 STORE_NAME               2 (c)
            22 LOAD_CONST               2 (None)
 ```
-The code execution is a simple: it **adds** two variables `a` e `b` each one containing strings (`'str'` and `'ing'`) and as result of this operation it generates a new concatenated string `'string'` and storing in `c`.
+What this code does is: **adds** two variables `a` e `b` each one containing strings (`'str'` and `'ing'`) and as result of this operation it generates a new concatenated string `'string'` and store it in `c`.
 
-For the purposes of this tutorial, we are just interested in how this **"add"** operation is executed by CPython. In the byte-code this operation is represented by the *byte offset 18* containing the opcode `BINARY_ADD`. If you are familiar to Python's compiler you know that `BINARY_ADD` is called anytime the `+` operator appears in your code. 
+For the purposes of this tutorial, we are just interested in how this **"add"** operation is executed by CPython. In the our byte-code this operation is represented by the *byte offset 18* containing the opcode `BINARY_ADD`. If you are familiar to Python's compiler you know that `BINARY_ADD` is called anytime the `+` operator appears in your source code independently of the operands' types and the compiler takes care of doing the right thing (correct operation) in execution time.  
 
-*** we will ignore all the reference counter increasing / decreasing stuff as well as all debugging and exception handling not relevant to the main execution of `+`. Also, we will not go over all the optimizations the compiler does because they are relevant in our example - which is very basic.***
+*** we will ignore all the reference counter increasing / decreasing stuff as well as all debugging and exception handling not relevant to the main execution of `+`. Also, we will not go over most of the optimizations the compiler does if it doens't alter significantly the execution path.***
 
-  The definition of *BINARY_ADD* is inside *ceval.c*. Here is a **simplified** version of it that will help us to understand what it does:
+  So, supposing we are executing the code example, we start this trace when it enters the `BINARY_ADD` case inside of the mais loop. The definition of `BINARY_ADD` is located inside *ceval.c*. Here is a **simplified** version (removing all the stuff that we don't need to care about in this tutorial) of it that will help us to get a macro definition of what it does:
 ```C
        case BINARY_ADD:
           w = POP();
@@ -45,101 +45,22 @@ For the purposes of this tutorial, we are just interested in how this **"add"** 
           if (x != NULL) continue;
           break;
   ```
-In this case, the compiler first tries to do the integer `+` checking the type with `PyInt_CheckExact` and then if it fails, it tries to do something else and the next attempt is to see if the arguments are string types, which is true in our example. The thing to notice here is that BINARY_ADD is actually executing just one *relevant* line of code in which it calls `string_concatenate`. The parameters `f`and `next_instr` are passed because this called functions needs to access the variables inside the current frame as well as its next instruction (for some optimizations reasons and to get the destination variable where it will store the resulting concatenated string).
-When the compiler enters this if statement it calls the **string_concatenate** function which is located in *ceval.c*. The arguments passed to this function are basically the operands and references to the next instruction as it will save the concatenation result somewhere indicated by the next *opcode + arg*. In our case the next opcode is *STORE_NAME* which means that the return value will be stored in some variable but we don't need to worry about this right now.
-
+In this case, the compiler first tries to do the integer (arithimetic) `+` checking operands' types  with `PyInt_CheckExact` and then if it fails, in the next attempt it verifies whether the arguments are of type *string*, which they are in our code. It then enters the if statement, somehow gets the concatenated value, push it onto the satack and the return.
+The thing to notice here is that `BINARY_ADD` is actually executing just *one really relevant* line of code in which it calls `string_concatenate` which we are going to inspect next. 
+When the compiler enters this if statement it calls the `string_concatenate` function located in `ceval.c`. The arguments passed to this function are basically the string operands and references to the current variable names and next instruction as it will save the concatenation result somewhere indicated by the next `opcode + oparg`. In our case, the next opcode is `STORE_NAME` which means that the return value will be stored in the variable `c` indicated in its oparg variable but we don't need to worry about this right now.
+This is our the **simplified** version of `string_concatenate`:
 ```C
 static PyObject *
-string_concatenate(PyObject *v, PyObject *w,
-                   PyFrameObject *f, unsigned char *next_instr)
+string_concatenate(PyObject *v, PyObject *w, PyFrameObject *f, unsigned char *next_instr)
 {
-    /* This function implements 'variable += expr' when both arguments
-       are strings. */
-    Py_ssize_t v_len = PyString_GET_SIZE(v);
-    Py_ssize_t w_len = PyString_GET_SIZE(w);
-    Py_ssize_t new_len = v_len + w_len;
-    if (new_len < 0) {
-        PyErr_SetString(PyExc_OverflowError,
-                        "strings are too large to concat");
-        return NULL;
-    }
-
-    if (v->ob_refcnt == 2) {
-        /* In the common case, there are 2 references to the value
-         * stored in 'variable' when the += is performed: one on the
-         * value stack (in 'v') and one still stored in the
-         * 'variable'.  We try to delete the variable now to reduce
-         * the refcnt to 1.
-         */
-        switch (*next_instr) {
-        case STORE_FAST:
-        {
-            int oparg = PEEKARG();
-            PyObject **fastlocals = f->f_localsplus;
-            if (GETLOCAL(oparg) == v)
-                SETLOCAL(oparg, NULL);
-            break;
-        }
-        case STORE_DEREF:
-        {
-            PyObject **freevars = (f->f_localsplus +
-                                   f->f_code->co_nlocals);
-            PyObject *c = freevars[PEEKARG()];
-            if (PyCell_GET(c) == v)
-                PyCell_Set(c, NULL);
-            break;
-        }
-        case STORE_NAME:
-        {
-            PyObject *names = f->f_code->co_names;
-            PyObject *name = GETITEM(names, PEEKARG());
-            PyObject *locals = f->f_locals;
-            if (PyDict_CheckExact(locals) &&
-                PyDict_GetItem(locals, name) == v) {
-                if (PyDict_DelItem(locals, name) != 0) {
-                    PyErr_Clear();
-                }
-            }
-            break;
-        }
-        }
-    }
-
-    if (v->ob_refcnt == 1 && !PyString_CHECK_INTERNED(v)) {
-        /* Now we own the last reference to 'v', so we can resize it
-         * in-place.
-         */
-        if (_PyString_Resize(&v, new_len) != 0) {
-            /* XXX if _PyString_Resize() fails, 'v' has been
-             * deallocated so it cannot be put back into
-             * 'variable'.  The MemoryError is raised when there
-             * is no value in 'variable', which might (very
-             * remotely) be a cause of incompatibilities.
-             */
-            return NULL;
-        }
-        /* copy 'w' into the newly allocated area of 'v' */
-        memcpy(PyString_AS_STRING(v) + v_len,
-               PyString_AS_STRING(w), w_len);
-        return v;
-    }
-    else {
-        /* When in-place resizing is not an option. */
-        PyString_Concat(&v, w);
-        return v;
-    }
+...
+      /* When in-place resizing is not an option. */
+      PyString_Concat(&v, w);
+      return v;
+...
 }
 ```
-
-
-  Inside the **string_concatenate** function we can see some optimizations such
-as the a fast way to concatenate with '*+=*' but in our case we end up executing
-the **PyString_Concat(&v, w)** (line 4868). This function takes us to the 
-**stringobject.c** file. This function will then call **string_concat** after checking
-if the operands are PyStringObjects. This *string_concat* function take as parameters
-just the operands and does the actual concatenation. This function looks complex but
-as you will see, all the complexity comes from the exceptions/errors handling and some
-optimizations.
+We are omitting several lines of code that are responsible for optimizations and error handling. The original function, for instance, could do the concatenae operation right away if it was called with `+=` or some other *inline* formats of it. We skip all of it since our execution doesn't enter there. The compiler will end up executing the `PyString_Concat(&v, w)` (`line 4868` of `ceval.c`) . This function takes us to the `stringobject.c` file and `PyString_Concat(&v, w)` will then call `string_concat` after confrming that the arguments are  `PyStringObjects`. This last  `string_concat` function (`line 1015` of `stringobject.c`) take as parameters just the operands and does the actual concatenation. This function looks complex but as you will see, all the complexity comes from the exceptions/errors handling and some optimizations.
   
 ````C
 static PyObject *
