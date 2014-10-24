@@ -20,11 +20,11 @@ and its respective byte-code:
            19 STORE_NAME               2 (c)
            22 LOAD_CONST               2 (None)
 ```
-What this code does is: **adds** two variables `a` e `b` each one containing strings (`'str'` and `'ing'`) and as result of this operation it generates a new concatenated string `'string'` and store it in `c`.
+What this code does is **adds** two variables `a` e `b` each one containing strings (`'str'` and `'ing'`) and as result of this operation it generates a new concatenated string `'string'` and store it in `c`.
 
 For the purposes of this tutorial, we are just interested in how this **"add"** operation is executed by CPython. In the our byte-code this operation is represented by the *byte offset 18* containing the opcode `BINARY_ADD`. If you are familiar to Python's compiler you know that `BINARY_ADD` is called anytime the `+` operator appears in your source code independently of the operands' types and the compiler takes care of doing the right thing (correct operation) in execution time.  
 
-*** we will ignore all the reference counter increasing / decreasing stuff as well as all debugging and exception handling not relevant to the main execution of `+`. Also, we will not go over most of the optimizations the compiler does if it doens't alter significantly the execution path.***
+_we will ignore all the reference counter increasing / decreasing stuff as well as all debugging and exception handling not relevant to the main execution of `+`. Also, we will not go over most of the optimizations the compiler does if it doens't alter significantly the execution path._
 
   So, supposing we are executing the code example, we start this trace when it enters the `BINARY_ADD` case inside of the mais loop. The definition of `BINARY_ADD` is located inside *ceval.c*. Here is a **simplified** version (removing all the stuff that we don't need to care about in this tutorial) of it that will help us to get a macro definition of what it does:
 ```C
@@ -60,102 +60,43 @@ string_concatenate(PyObject *v, PyObject *w, PyFrameObject *f, unsigned char *ne
 ...
 }
 ```
-We are omitting several lines of code that are responsible for optimizations and error handling. The original function, for instance, could do the concatenae operation right away if it was called with `+=` or some other *inline* formats of it. We skip all of it since our execution doesn't enter there. The compiler will end up executing the `PyString_Concat(&v, w)` (`line 4868` of `ceval.c`) . This function takes us to the `stringobject.c` file and `PyString_Concat(&v, w)` will then call `string_concat` after confrming that the arguments are  `PyStringObjects`. This last  `string_concat` function (`line 1015` of `stringobject.c`) take as parameters just the operands and does the actual concatenation. This function looks complex but as you will see, all the complexity comes from the exceptions/errors handling and some optimizations.
-  
+We are omitting several lines of code that are responsible for optimizations and error handling. The original function, for instance, could do the concatenae operation right away if it was called with `+=` or some other *inline* formats of it. We skip all of it since our execution doesn't enter there. The compiler will end up executing the `PyString_Concat(&v, w)` (`line 4868` of `ceval.c`) . This function takes us to the `stringobject.c` file and `PyString_Concat(&v, w)` will then call `string_concat` after confrming that the arguments are  `PyStringObjects`. This last  `string_concat` function (`line 1015` of `stringobject.c`) take as parameters just the operands and does the actual concatenation. This function is a little more complex than the previous ones but most of the complexity comes from the exceptions/errors handling and some optimizations.
+The **simplified** version of `string_concat`, removing all the lines we are not interested in, looks like this: 
 ````C
 static PyObject *
 string_concat(register PyStringObject *a, register PyObject *bb)
 {
     register Py_ssize_t size;
     register PyStringObject *op;
-    if (!PyString_Check(bb)) {
-#ifdef Py_USING_UNICODE
-        if (PyUnicode_Check(bb))
-            return PyUnicode_Concat((PyObject *)a, bb);
-#endif
-        if (PyByteArray_Check(bb))
-            return PyByteArray_Concat((PyObject *)a, bb);
-        PyErr_Format(PyExc_TypeError,
-                     "cannot concatenate 'str' and '%.200s' objects",
-                     Py_TYPE(bb)->tp_name);
-        return NULL;
-    }
-#define b ((PyStringObject *)bb)
-    /* Optimize cases with empty left or right operand */
-    if ((Py_SIZE(a) == 0 || Py_SIZE(b) == 0) &&
-        PyString_CheckExact(a) && PyString_CheckExact(b)) {
-        if (Py_SIZE(a) == 0) {
-            Py_INCREF(bb);
-            return bb;
-        }
-        Py_INCREF(a);
-        return (PyObject *)a;
-    }
+    ...
     size = Py_SIZE(a) + Py_SIZE(b);
-    /* Check that string sizes are not negative, to prevent an
-       overflow in cases where we are passed incorrectly-created
-       strings with negative lengths (due to a bug in other code).
-    */
-    if (Py_SIZE(a) < 0 || Py_SIZE(b) < 0 ||
-        Py_SIZE(a) > PY_SSIZE_T_MAX - Py_SIZE(b)) {
-        PyErr_SetString(PyExc_OverflowError,
-                        "strings are too large to concat");
-        return NULL;
-    }
-
-    /* Inline PyObject_NewVar */
-    if (size > PY_SSIZE_T_MAX - PyStringObject_SIZE) {
-        PyErr_SetString(PyExc_OverflowError,
-                        "strings are too large to concat");
-        return NULL;
-    }
+...
     op = (PyStringObject *)PyObject_MALLOC(PyStringObject_SIZE + size);
-    if (op == NULL)
-        return PyErr_NoMemory();
+...
     PyObject_INIT_VAR(op, &PyString_Type, size);
-    op->ob_shash = -1;
-    op->ob_sstate = SSTATE_NOT_INTERNED;
+...
     Py_MEMCPY(op->ob_sval, a->ob_sval, Py_SIZE(a));
     Py_MEMCPY(op->ob_sval + Py_SIZE(a), b->ob_sval, Py_SIZE(b));
     op->ob_sval[size] = '\0';
     return (PyObject *) op;
-#undef b
+...
 }
 
 ```
-  As our example case is the basic one, we can skip almost all the code
-and go straight to **line 1042** in the *stringobject.c* file where the 
-compiler calculates the necessary size of the resulting string and store
-it in this **size** variable that we are going to use few steps ahead:
-
-> size = Py_SIZE(a) + Py_SIZE(b);
+As our example is simple, we can skip almost all the original function code and go straight to `line 1042` in the `stringobject.c` file where the compiler calculates the necessary size of the resulting string and store it in this `size` variable that we are going to use few steps ahead: `size = Py_SIZE(a) + Py_SIZE(b)`
   
-  Now we jump to **line 1060** and the execution go over all the next lines
-until the function returns the concatenation result. Again, we are just 
-interested on the actual concatenation, so we are going to consider just 
-these lines:
-````C
-op = (PyStringObject *)PyObject_MALLOC(PyStringObject_SIZE + size);
-...
-PyObject_INIT_VAR(op, &PyString_Type, size);
-...
-Py_MEMCPY(op->ob_sval, a->ob_sval, Py_SIZE(a));
-Py_MEMCPY(op->ob_sval + Py_SIZE(a), b->ob_sval, Py_SIZE(b));
-op->ob_sval[size] = '\0';
-return (PyObject *) op;
-```
-Following the sequence the compiler is:
+Then the compiles continues its execution going over all the next lines. Again, we are just interested on the actual concatenation, so we are going to examie just these lines:
 
 1. ` PyObjectMALLOC(PyStringObject_SIZE + size) `
-Allocating memory of sufficient size to store the resulting PyObject  - standard PyString size (header)  + calculated **size** of the two strings. This memory is allocated to **op** which in turn will be the resulting string.
+Allocating memory of sufficient size to store the resulting PyObject  - standard PyString size (header)  + calculated `size` of the two strings. This memory is allocated to `op` which in turn will be the resulting string.
 
 2. `Py_MEMCPY(op->ob_sval, a->ob_sval, Py_SIZE(a)) `
-Py_MEMCPY is a macro that calls the **memcpy** C function. We can find its definition in the *pyport.h* file to see what the arguments are: **Py_MEMCPY(target,source,length)**. So, this line is basically saying that it will copy Py_SIZE(a) characters from the value of **a** (which is the actual C string inside the *sval* field of the object) to the new object's *sval*.
+`Py_MEMCPY` is a macro that calls the `memcpy` C function. We can find its definition in the `pyport.h` file. The arguments passed to this macro are: `Py_MEMCPY(_target,source,length_)`. So, this line is basically saying that it will copy `Py_SIZE(a)` characters from the value of `a` (which is the actual C string inside the `sval` field of the object) to the new object's `sval`.
 
 3. `Py_MEMCPY(op->ob_sval + Py_SIZE(a), b->ob_sval,Py_SIZE(b)) `
-The same occurs here with a slightly difference as it needs to start to copy the characters from **b** to *op->sval* starting after the last character already copied on the previous step, i.e., it starts copyting to the offset *op->sval + Py_Size(a)* and copy *Py_SIZE(b)* bytes to the new object.
+The same occurs here with a slightly difference as it needs to start to copy the characters from `b` to `op->sval` starting after the last character already copied on the previous step, i.e., it copies `Py_SIZE(b)` bytes to the offset starting in `op->sval + Py_Size(a)` position.
 
 4. `op->ob_sval[size] = '\0'`
-At this point the string concatenation is already finished but, as we all know, in the end it's all C under the hood so we need to follow the C convention and put the `'\0'` character to indicate that the string ends here so the C string value can be used by the compiler as a regular string.
+At this point the string concatenation is already finished but, as we all know, in the end it's all C under the hood so we need to follow the some C conventions sometimes. In this case, put the `'\0'` character to indicate that the string ends here so the C string value can be used by the compiler as a regular string.
 
-The new object *op* is then returned to the caller and the compiler eventually gets back to ceval.c returning the new string and storing it in **c** as indicated in our python source code.
+The new object `op` is then returned to the caller and the compiler eventually gets back to `ceval.c` returning the new string and storing it in `c` as indicated in our python source code.
