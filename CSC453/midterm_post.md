@@ -26,9 +26,9 @@ and its respective byte-code:
   This code is really simple and just "add" two variables containing respectvely
 'str' and 'ing' producing the result 'string' and storing it in a new variable.
 
-  The byte-code has just one line that we are interested in, the byte offset 18 
-containing the opcode BINARY_ADD. If you are familiarized with other Python 
-you will notice that this BINARY_ADD is the same used anytime a '+' operator
+  The byte-code has just one line that we are interested in, the **byte offset 18** 
+containing the opcode **BINARY_ADD**. If you are familiarized with other Python 
+you will notice that this **BINARY_ADD** is the same used anytime a '+' operator
 appears in your code. The question is: how could CPython know that we are now
 talking about strings and not integers, and that is what we will see in the
 next steps.
