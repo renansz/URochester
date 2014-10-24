@@ -28,18 +28,18 @@ and its respective byte-code:
 
   The byte-code has just one line that we are interested in, the **byte offset 18** 
 containing the opcode **BINARY_ADD**. If you are familiarized with other Python 
-you will notice that this **BINARY_ADD** is the same used anytime a '+' operator
-appears in your code. The question is: how could CPython know that we are now
+you will notice that this **BINARY_ADD** is the same used anytime a '*+*' operator
+appears in your code. The question is how could CPython know that we are now
 talking about strings and not integers, and that is what we will see in the
 next steps.
 
 *** For the purposes of this tutorial we will ignore all the reference counter
 increasing / decreasing codes as well as all debugging and exception handling
 code. Also, we will not go over all the optimizations that the compiler does
-because they are not essential to the understanding of what the '+' operator
+because they are not essential to the understanding of what the '*+*' operator
 does***
 
-  The algorithm used to implement BINARY_ADD looks like this:
+  The algorithm used to implement *BINARY_ADD* looks like this:
 ```
          case BINARY_ADD:
             w = POP();
@@ -75,16 +75,20 @@ does***
   ```
   The first thing we need to know is what the CheckExact functions do. It turns
 out that they are just a Python's compiler type checking functions. In this 
-case, the compiler first tries to do the integer (PyInt_CheckExact) and then
+case, the compiler first tries to do the integer *PyInt_CheckExact* and then
 if it fails, it tries to do something else and the next attempt is to see if
 the arguments are string types, which they are in our example:
+
 >  v = 'ing'
 >  w = 'str'
-when the compiler enters this if statement it now calls this string_concatenate
-function putting our arguments in it as well as some some other ones: 'f' and 
-'next_instr'. 'f' is a reference to the current frame where the main loop is
-being executed and 'next_instr' is being processed
-
+  
+  when the compiler enters this if statement it calls the **string_concatenate**
+function which is located in *ceval.c*. The arguments passed to this function
+are basically the operands and references to the next instruction as it will
+save the concatenation result somewhere indicated by the next *opcode + arg*.
+In our case the next opcode is *STORE_NAME* which means that the return value 
+will be stored in some variable but we don't need to worry about this right
+now.
 
 ```
 static PyObject *
@@ -169,4 +173,96 @@ string_concatenate(PyObject *v, PyObject *w,
 }
 ```
 
- 
+
+  Inside the **string_concatenate** function we can see some optimizations such
+as the a fast way to concatenate with '*+=*' but in our case we end up executing
+the **PyString_Concat(&v, w)** (line 4868). This function takes us to the 
+**stringobject.c** file. This function will then call **string_concat** after checking
+if the operands are PyStringObjects. This *string_concat* function take as parameters
+just the operands and does the actual concatenation. This function looks complex but
+as you will see, all the complexity comes from the exceptions/errors handling and some
+optimizations.
+  
+````
+static PyObject *
+string_concat(register PyStringObject *a, register PyObject *bb)
+{
+    register Py_ssize_t size;
+    register PyStringObject *op;
+    if (!PyString_Check(bb)) {
+#ifdef Py_USING_UNICODE
+        if (PyUnicode_Check(bb))
+            return PyUnicode_Concat((PyObject *)a, bb);
+#endif
+        if (PyByteArray_Check(bb))
+            return PyByteArray_Concat((PyObject *)a, bb);
+        PyErr_Format(PyExc_TypeError,
+                     "cannot concatenate 'str' and '%.200s' objects",
+                     Py_TYPE(bb)->tp_name);
+        return NULL;
+    }
+#define b ((PyStringObject *)bb)
+    /* Optimize cases with empty left or right operand */
+    if ((Py_SIZE(a) == 0 || Py_SIZE(b) == 0) &&
+        PyString_CheckExact(a) && PyString_CheckExact(b)) {
+        if (Py_SIZE(a) == 0) {
+            Py_INCREF(bb);
+            return bb;
+        }
+        Py_INCREF(a);
+        return (PyObject *)a;
+    }
+    size = Py_SIZE(a) + Py_SIZE(b);
+    /* Check that string sizes are not negative, to prevent an
+       overflow in cases where we are passed incorrectly-created
+       strings with negative lengths (due to a bug in other code).
+    */
+    if (Py_SIZE(a) < 0 || Py_SIZE(b) < 0 ||
+        Py_SIZE(a) > PY_SSIZE_T_MAX - Py_SIZE(b)) {
+        PyErr_SetString(PyExc_OverflowError,
+                        "strings are too large to concat");
+        return NULL;
+    }
+
+    /* Inline PyObject_NewVar */
+    if (size > PY_SSIZE_T_MAX - PyStringObject_SIZE) {
+        PyErr_SetString(PyExc_OverflowError,
+                        "strings are too large to concat");
+        return NULL;
+    }
+    op = (PyStringObject *)PyObject_MALLOC(PyStringObject_SIZE + size);
+    if (op == NULL)
+        return PyErr_NoMemory();
+    PyObject_INIT_VAR(op, &PyString_Type, size);
+    op->ob_shash = -1;
+    op->ob_sstate = SSTATE_NOT_INTERNED;
+    Py_MEMCPY(op->ob_sval, a->ob_sval, Py_SIZE(a));
+    Py_MEMCPY(op->ob_sval + Py_SIZE(a), b->ob_sval, Py_SIZE(b));
+    op->ob_sval[size] = '\0';
+    return (PyObject *) op;
+#undef b
+}
+
+```
+  As our example case is the basic one, we can skip almost all the code
+and go straight to **line 1042** in the stringobject.c file where the 
+compiler calculates the necessary size of the resulting string:
+
+> size = Py_SIZE(a) + Py_SIZE(b);
+  
+  Now we jump to **line 1060** and go all the way until the function 
+returns the concatenation result.
+
+````
+    op = (PyStringObject *)PyObject_MALLOC(PyStringObject_SIZE + size);
+    if (op == NULL)
+        return PyErr_NoMemory();
+    PyObject_INIT_VAR(op, &PyString_Type, size);
+    op->ob_shash = -1;
+    op->ob_sstate = SSTATE_NOT_INTERNED;
+    Py_MEMCPY(op->ob_sval, a->ob_sval, Py_SIZE(a));
+    Py_MEMCPY(op->ob_sval + Py_SIZE(a), b->ob_sval, Py_SIZE(b));
+    op->ob_sval[size] = '\0';
+    return (PyObject *) op;
+
+```
