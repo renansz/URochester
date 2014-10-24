@@ -23,21 +23,11 @@ and its respective byte-code:
            19 STORE_NAME               2 (c)
            22 LOAD_CONST               2 (None)
 ```
-  This code is really simple and just "add" two variables containing respectvely
-'str' and 'ing' producing the result 'string' and storing it in a new variable.
+The code execution is a simple: it **adds** two variables `a` e `b` each one containing strings (`'str'` and `'ing'`) and as result of this operation it generates a new concatenated string `'string'` and storing in `c`.
 
-  The byte-code has just one line that we are interested in, the **byte offset 18** 
-containing the opcode **BINARY_ADD**. If you are familiarized with other Python 
-you will notice that this **BINARY_ADD** is the same used anytime a '*+*' operator
-appears in your code. The question is how could CPython know that we are now
-talking about strings and not integers, and that is what we will see in the
-next steps.
+For the purposes of this tutorial, we are interested in finding out what this **"add"** operation is executed. In the byte-code it is represented by the *byte offset 18* containing the opcode `BINARY_ADD`. If you are familiar to Python's compiler you know that `BINARY_ADD` is called anytime the `+` operator appears in your code. 
 
-*** For the purposes of this tutorial we will ignore all the reference counter
-increasing / decreasing codes as well as all debugging and exception handling
-code. Also, we will not go over all the optimizations that the compiler does
-because they are not essential to the understanding of what the '*+*' operator
-does***
+*** we will ignore all the reference counter increasing / decreasing stuff as well as all debugging and exception handling not relevant to the main execution of `+`. Also, we will not go over all the optimizations the compiler does because they are relevant in our example - which is very basic.***
 
   The algorithm used to implement *BINARY_ADD* looks like this:
 ```C
