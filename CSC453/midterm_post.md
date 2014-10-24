@@ -9,19 +9,19 @@ b = 'ing'
 c = a + b
 ```
 and its respective byte-code:
+```
+1           0 LOAD_CONST               0 ('str')
+            3 STORE_NAME               0 (a)
 
->1           0 LOAD_CONST               0 ('str')
->            3 STORE_NAME               0 (a)
->
->2           6 LOAD_CONST               1 ('ing')
->            9 STORE_NAME               1 (b)
->
->3          12 LOAD_NAME                0 (a)
->           15 LOAD_NAME                1 (b)
->           18 BINARY_ADD          
->           19 STORE_NAME               2 (c)
->           22 LOAD_CONST               2 (None)
+2           6 LOAD_CONST               1 ('ing')
+            9 STORE_NAME               1 (b)
 
+3          12 LOAD_NAME                0 (a)
+           15 LOAD_NAME                1 (b)
+           18 BINARY_ADD          
+           19 STORE_NAME               2 (c)
+           22 LOAD_CONST               2 (None)
+```
 This code is really simple and just "add" two variables containing respectvely
 'str' and 'ing' producing the result 'string' and storing it in a new variable.
 
