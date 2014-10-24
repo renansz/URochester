@@ -1,5 +1,6 @@
 ## Concatenating two strings together with the '+' operator
-The goal of this tutorial is to show how the Python compiler (CPython)
+
+            The goal of this tutorial is to show how the Python compiler (CPython)
 implements the '+' operator as string concatenation. In order to show that,
 we will trace the execution of the the following python code through the main
 loop of the compiler:
@@ -22,19 +23,23 @@ and its respective byte-code:
            19 STORE_NAME               2 (c)
            22 LOAD_CONST               2 (None)
 ```
-This code is really simple and just "add" two variables containing respectvely
+            This code is really simple and just "add" two variables containing respectvely
 'str' and 'ing' producing the result 'string' and storing it in a new variable.
 
-The byte-code has just one line that we are interested in, the byte offset 18 
+            The byte-code has just one line that we are interested in, the byte offset 18 
 containing the opcode BINARY_ADD. If you are familiarized with other Python 
 you will notice that this BINARY_ADD is the same used anytime a '+' operator
 appears in your code. The question is: how could CPython know that we are now
 talking about strings and not integers, and that is what we will see in the
 next steps.
+
 *** For the purposes of this tutorial we will ignore all the reference counter
 increasing / decreasing codes as well as all debugging and exception handling
-code.*** 
-The algorithm used to implement BINARY_ADD looks like this:
+code. Also, we will not go over all the optimizations that the compiler does
+because they are not essential to the understanding of what the '+' operator
+does***
+
+            The algorithm used to implement BINARY_ADD looks like this:
 ```
          case BINARY_ADD:
             w = POP();
@@ -68,13 +73,13 @@ The algorithm used to implement BINARY_ADD looks like this:
             if (x != NULL) continue;
             break;
   ```
-The first thing we need to know is what the CheckExact functions do. It turns
+            The first thing we need to know is what the CheckExact functions do. It turns
 out that they are just a Python's compiler type checking functions. In this 
 case, the compiler first tries to do the integer (PyInt_CheckExact) and then
 if it fails, it tries to do something else and the next attempt is to see if
 the arguments are string types, which they are in our example:
-  v = 'ing' and 
-  w = 'str'
+>  v = 'ing'
+>  w = 'str'
 when the compiler enters this if statement it now calls this string_concatenate
 function putting our arguments in it as well as some some other ones: 'f' and 
 'next_instr'. 'f' is a reference to the current frame where the main loop is
