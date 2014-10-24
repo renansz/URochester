@@ -245,35 +245,26 @@ string_concat(register PyStringObject *a, register PyObject *bb)
 
 ```
   As our example case is the basic one, we can skip almost all the code
-and go straight to **line 1042** in the stringobject.c file where the 
-compiler calculates the necessary size of the resulting string:
+and go straight to **line 1042** in the *stringobject.c* file where the 
+compiler calculates the necessary size of the resulting string and store
+it in this **size** variable that we are going to use few steps ahead:
 
 > size = Py_SIZE(a) + Py_SIZE(b);
   
   Now we jump to **line 1060** and the execution go over all the next lines
-until the function returns the concatenation result.
-
+until the function returns the concatenation result. Again, we are just 
+interested on the actual concatenation, so we are going to consider just 
+these lines:
 ````
-    op = (PyStringObject *)PyObject_MALLOC(PyStringObject_SIZE + size);
-    if (op == NULL)
-        return PyErr_NoMemory();
-    PyObject_INIT_VAR(op, &PyString_Type, size);
-    op->ob_shash = -1;
-    op->ob_sstate = SSTATE_NOT_INTERNED;
-    Py_MEMCPY(op->ob_sval, a->ob_sval, Py_SIZE(a));
-    Py_MEMCPY(op->ob_sval + Py_SIZE(a), b->ob_sval, Py_SIZE(b));
-    op->ob_sval[size] = '\0';
-    return (PyObject *) op;
+op = (PyStringObject *)PyObject_MALLOC(PyStringObject_SIZE + size);
+...
+PyObject_INIT_VAR(op, &PyString_Type, size);
+...
+Py_MEMCPY(op->ob_sval, a->ob_sval, Py_SIZE(a));
+Py_MEMCPY(op->ob_sval + Py_SIZE(a), b->ob_sval, Py_SIZE(b));
+op->ob_sval[size] = '\0';
+return (PyObject *) op;
 ```
-Again there are XXX lines that we are interested in:
-> op = (PyStringObject *)PyObject_MALLOC(PyStringObject_SIZE + size);
-
-> PyObject_INIT_VAR(op, &PyString_Type, size);
-
-> Py_MEMCPY(op->ob_sval, a->ob_sval, Py_SIZE(a));
-
-> Py_MEMCPY(op->ob_sval + Py_SIZE(a), b->ob_sval, Py_SIZE(b));
-
-> op->ob_sval[size] = '\0';
-
-> return (PyObject *) op;
+Following the sequence the compiler is:
+1. PyObjectMALLOC(PyStringObject_SIZE + size) => Allocating memory of sufficient size to store the resulting PyObject  - standard PyString size (header)  + calculated **size** of the two strings. This memory is allocated to **op** which in turn will be the resulting string.
+2. Py_MEMCPY(op->ob_sval, a->ob_sval, Py_SIZE(a)) =>
