@@ -267,8 +267,13 @@ until the function returns the concatenation result.
 ```
 Again there are XXX lines that we are interested in:
 > op = (PyStringObject *)PyObject_MALLOC(PyStringObject_SIZE + size);
+
 > PyObject_INIT_VAR(op, &PyString_Type, size);
+
 > Py_MEMCPY(op->ob_sval, a->ob_sval, Py_SIZE(a));
+
 > Py_MEMCPY(op->ob_sval + Py_SIZE(a), b->ob_sval, Py_SIZE(b));
+
 > op->ob_sval[size] = '\0';
+
 > return (PyObject *) op;
