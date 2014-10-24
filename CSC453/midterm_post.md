@@ -1,6 +1,6 @@
 ## Concatenating two strings together with the '+' operator
 
-            The goal of this tutorial is to show how the Python compiler (CPython)
+  The goal of this tutorial is to show how the Python compiler (CPython)
 implements the '+' operator as string concatenation. In order to show that,
 we will trace the execution of the the following python code through the main
 loop of the compiler:
@@ -23,10 +23,10 @@ and its respective byte-code:
            19 STORE_NAME               2 (c)
            22 LOAD_CONST               2 (None)
 ```
-            This code is really simple and just "add" two variables containing respectvely
+  This code is really simple and just "add" two variables containing respectvely
 'str' and 'ing' producing the result 'string' and storing it in a new variable.
 
-            The byte-code has just one line that we are interested in, the byte offset 18 
+  The byte-code has just one line that we are interested in, the byte offset 18 
 containing the opcode BINARY_ADD. If you are familiarized with other Python 
 you will notice that this BINARY_ADD is the same used anytime a '+' operator
 appears in your code. The question is: how could CPython know that we are now
@@ -73,7 +73,7 @@ does***
             if (x != NULL) continue;
             break;
   ```
-            The first thing we need to know is what the CheckExact functions do. It turns
+  The first thing we need to know is what the CheckExact functions do. It turns
 out that they are just a Python's compiler type checking functions. In this 
 case, the compiler first tries to do the integer (PyInt_CheckExact) and then
 if it fails, it tries to do something else and the next attempt is to see if
