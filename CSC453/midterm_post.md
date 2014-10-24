@@ -39,7 +39,7 @@ code. Also, we will not go over all the optimizations that the compiler does
 because they are not essential to the understanding of what the '+' operator
 does***
 
-            The algorithm used to implement BINARY_ADD looks like this:
+  The algorithm used to implement BINARY_ADD looks like this:
 ```
          case BINARY_ADD:
             w = POP();
