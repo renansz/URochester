@@ -4,7 +4,7 @@
 implements the '+' operator as string concatenation. In order to show that,
 we will trace the execution of the the following python code through the main
 loop of the compiler:
-```
+```python
 a = 'str'
 b = 'ing'
 c = a + b
@@ -40,7 +40,7 @@ because they are not essential to the understanding of what the '*+*' operator
 does***
 
   The algorithm used to implement *BINARY_ADD* looks like this:
-```
+```C
          case BINARY_ADD:
             w = POP();
             v = TOP();
@@ -90,7 +90,7 @@ In our case the next opcode is *STORE_NAME* which means that the return value
 will be stored in some variable but we don't need to worry about this right
 now.
 
-```
+```C
 static PyObject *
 string_concatenate(PyObject *v, PyObject *w,
                    PyFrameObject *f, unsigned char *next_instr)
@@ -183,7 +183,7 @@ just the operands and does the actual concatenation. This function looks complex
 as you will see, all the complexity comes from the exceptions/errors handling and some
 optimizations.
   
-````
+````C
 static PyObject *
 string_concat(register PyStringObject *a, register PyObject *bb)
 {
@@ -255,7 +255,7 @@ it in this **size** variable that we are going to use few steps ahead:
 until the function returns the concatenation result. Again, we are just 
 interested on the actual concatenation, so we are going to consider just 
 these lines:
-````
+````C
 op = (PyStringObject *)PyObject_MALLOC(PyStringObject_SIZE + size);
 ...
 PyObject_INIT_VAR(op, &PyString_Type, size);
@@ -267,11 +267,11 @@ return (PyObject *) op;
 ```
 Following the sequence the compiler is:
 
-`PyObjectMALLOC(PyStringObject_SIZE + size)
-> Allocating memory of sufficient size to store the resulting PyObject  - standard PyString size (header)  + calculated **size** of the two strings. This memory is allocated to **op** which in turn will be the resulting string.
+1. ` PyObjectMALLOC(PyStringObject_SIZE + size) `
+Allocating memory of sufficient size to store the resulting PyObject  - standard PyString size (header)  + calculated **size** of the two strings. This memory is allocated to **op** which in turn will be the resulting string.
 
-`Py_MEMCPY(op->ob_sval, a->ob_sval, Py_SIZE(a))
+2. `Py_MEMCPY(op->ob_sval, a->ob_sval, Py_SIZE(a)) `
 
-`Py_MEMCPY(op->ob_sval + Py_SIZE(a), b->ob_sval, Py_SIZE(b))
+3. `Py_MEMCPY(op->ob_sval + Py_SIZE(a), b->ob_sval,Py_SIZE(b)) `
 
-`op->ob_sval[size] = '\0'
+4. `op->ob_sval[size] = '\0'`
