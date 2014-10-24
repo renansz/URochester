@@ -266,5 +266,11 @@ op->ob_sval[size] = '\0';
 return (PyObject *) op;
 ```
 Following the sequence the compiler is:
+
 1. PyObjectMALLOC(PyStringObject_SIZE + size) => Allocating memory of sufficient size to store the resulting PyObject  - standard PyString size (header)  + calculated **size** of the two strings. This memory is allocated to **op** which in turn will be the resulting string.
+
 2. Py_MEMCPY(op->ob_sval, a->ob_sval, Py_SIZE(a)) =>
+
+3. Py_MEMCPY(op->ob_sval + Py_SIZE(a), b->ob_sval, Py_SIZE(b)) =>
+
+4. op->ob_sval[size] = '\0' => 
