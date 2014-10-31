@@ -28,23 +28,23 @@ _we will ignore all the reference counter increasing / decreasing operations as 
 
 So, supposing we are executing the example source code inside the main loop of `ceval.c`, we start our tracing here when it enters the `BINARY_ADD` case inside of the main execution loop. The definition of `BINARY_ADD` is located inside `ceval.c`. Here is a **simplified** version of it (removing all the stuff that we don't need to care about in this tutorial) that will help us to get a macro idea of what it does:
 ``` c
-       /* file: ceval.c */
-       case BINARY_ADD:
-          w = POP();
-          v = TOP();
-          if (PyInt_CheckExact(v) && PyInt_CheckExact(w)) {
-          ...
-          /* CODE EXECUTED IF the operands are Integers*/
-          ...
-          }
-          else if (PyString_CheckExact(v) && PyString_CheckExact(w)) {
-            x = string_concatenate(v, w, f, next_instr);
-              ...
-          }
-          ...
-          SET_TOP(x);
-          if (x != NULL) continue;
-          break;
+ /* file: ceval.c */
+ case BINARY_ADD:
+    w = POP();
+    v = TOP();
+    if (PyInt_CheckExact(v) && PyInt_CheckExact(w)) {
+    ...
+    /* CODE EXECUTED IF the operands are Integers*/
+    ...
+    }
+    else if (PyString_CheckExact(v) && PyString_CheckExact(w)) {
+      x = string_concatenate(v, w, f, next_instr);
+        ...
+    }
+    ...
+    SET_TOP(x);
+    if (x != NULL) continue;
+    break;
   ```
 The interpreter first tries to do the integer (arithmetic) `+` checking operands' types  with `PyInt_CheckExact` (not our case). The next attempt is to verify whether the arguments are of type *string*, which is true in our example. It will then enter the `else if` statement, somehow gets the concatenated value, push it onto the stack and then return the result to its caller. The thing to notice here is that `BINARY_ADD` is actually executing just **one really relevant** line of code:
 
