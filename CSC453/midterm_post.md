@@ -50,7 +50,6 @@ The interpreter first tries to do the integer (arithmetic) `+` checking operands
 
 #### `x = string_concatenate(v, w, f, next_instr);` ####
 
- which we are going to inspect next:
 
 ### Tracing the _string_concatenate_ call ###
 When the interpreter enters this if statement it calls the `string_concatenate` function located in `ceval.c`. The arguments passed to this function are basically two operands (strings) and references to the current frame and next instruction as it will try to save the concatenation result somewhere indicated by the next `opcode + oparg` (_optimizations_). This is our the **simplified** version of `string_concatenate`:
