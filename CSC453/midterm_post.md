@@ -46,7 +46,9 @@ So, supposing we are executing the example source code inside the main loop of `
           break;
   ```
 The interpreter first tries to do the integer (arithmetic) `+` checking operands' types  with `PyInt_CheckExact` (not our case). The next attempt is to verify whether the arguments are of type *string*, which is true in our example. It will then enter the `else if` statement, somehow gets the concatenated value, push it onto the stack and then return the result to its caller. The thing to notice here is that `BINARY_ADD` is actually executing just **one really relevant** line of code in which it calls `string_concatenate` - which we are going to inspect next:
+
 `x = string_concatenate(v, w, f, next_instr);`
+
 
 ### Tracing the _string_concatenate_ call ###
 When the interpreter enters this if statement it calls the `string_concatenate` function located in `ceval.c`. The arguments passed to this function are basically two operands (strings) and references to the current frame and next instruction as it will try to save the concatenation result somewhere indicated by the next `opcode + oparg` (_optimizations_). This is our the **simplified** version of `string_concatenate`:
