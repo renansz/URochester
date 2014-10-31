@@ -53,11 +53,11 @@ When the interpreter enters this if statement it calls the `string_concatenate` 
 static PyObject *
 string_concatenate(PyObject *v, PyObject *w, PyFrameObject *f, unsigned char *next_instr)
 {
-...
+  ...
       /* When in-place resizing is not an option. */
       PyString_Concat(&v, w);
       return v;
-...
+  ...
 }
 ```
 The lines removed from this code are mainly responsible for optimizations and error handling. The original function, for instance, could do the concatenate operation faster if it was called with `+=`, some empty argument or other *inlines* formats. We skip all these lines since our execution doesn't enter any of these alternative paths.
@@ -69,18 +69,18 @@ string_concat(register PyStringObject *a, register PyObject *bb)
 {
     register Py_ssize_t size;
     register PyStringObject *op;
-    . . .
+    ...
     size = Py_SIZE(a) + Py_SIZE(b);
-    . . .
+    ...
     op = (PyStringObject *)PyObject_MALLOC(PyStringObject_SIZE + size);
-    . . .
+    ...
     PyObject_INIT_VAR(op, &PyString_Type, size);
-    . . .
+    ...
     Py_MEMCPY(op->ob_sval, a->ob_sval, Py_SIZE(a));
     Py_MEMCPY(op->ob_sval + Py_SIZE(a), b->ob_sval, Py_SIZE(b));
     op->ob_sval[size] = '\0';
     return (PyObject *) op;
-    . . .
+    ...
 }
 
 ```
@@ -89,15 +89,19 @@ In our simple example, we can skip almost all the original function code and go 
 The interpreter then executes the next lines which are the ones mentioned above but as they are doing the core operation of our trace, i.e., the actual string concatenation, they are described in more detail:
 
 1. ` PyObjectMALLOC(PyStringObject_SIZE + size)`
+
 Allocates sufficient memory to store the resulting PyObject:  ( PyString Size (headers)  + `size` calculated above). This memory is allocated to the `op` object which in turn will be the returning PyString object.
 
 2. `Py_MEMCPY(op->ob_sval, a->ob_sval, Py_SIZE(a))`
+
 `Py_MEMCPY` is a macro that calls the `memcpy` C function. We can find its definition in the `pyport.h` file. The arguments passed to this macro are: `Py_MEMCPY(_target,source,length_)`. So, this line is basically saying that it will copy `Py_SIZE(a)` characters from the value of `a` (which is the actual C string inside the `a->sval`) to the new object `op->sval`.
 
 3. `Py_MEMCPY(op->ob_sval + Py_SIZE(a), b->ob_sval,Py_SIZE(b)) `
+
 The same macro is executed here but with different arguments as it needs to start copying the characters from `b->sval` to `op->sval` just after the last character already copied on the previous step, i.e., it needs to copy `Py_SIZE(b)` bytes to `op->sval` starting on the byte offset indicated by `op->sval + Py_Size(a)`.
 
 4. `op->ob_sval[size] = '\0'`
+
 At this point the string concatenation is already finished. `op->sval` has the `"string"` value but, as we all know, in the end it's all C under the hood. When we work with C strings we need to follow the C conventions. In this case, putting the `'\0'` character to indicate that the string ends here so that the interpreter can use this value as a regular C string.
 
 The new object `op` is then returned to the caller and the interpreter eventually gets back to `ceval.c` returning the new string and storing it in `c` as indicated in our python source code.
