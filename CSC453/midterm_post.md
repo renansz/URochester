@@ -48,7 +48,7 @@ So, supposing we are executing the example source code inside the main loop of `
   ```
 The interpreter first tries to do the integer (arithmetic) `+` checking operands' types  with `PyInt_CheckExact` (not our case). The next attempt is to verify whether the arguments are of type *string*, which is true in our example. It will then enter the `else if` statement, somehow gets the concatenated value, push it onto the stack and then return the result to its caller. The thing to notice here is that `BINARY_ADD` is actually executing just **one really relevant** line of code:
 
-> x = string_concatenate(v, w, f, next_instr);
+### `x = string_concatenate(v, w, f, next_instr);` ###
 
  which we are going to inspect next:
 
