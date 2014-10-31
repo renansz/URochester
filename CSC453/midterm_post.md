@@ -1,9 +1,9 @@
 ## Concatenating two strings together with the '+' operator ##
 
   The goal of this tutorial is to show how the Python interpreter (CPython) implements the `+` operator as string concatenation. In order to show that, we will trace the execution of the following python source code through the main loop of the interpreter:
-```python hl_lines="1 3"
+```python
 a = 'str'
-b = 'ing'
+`<strong>` b = 'ing' `</strong>`
 c = a + b
 ```
 which generates this byte-code:
@@ -37,7 +37,7 @@ So, supposing we are executing the example source code inside the main loop of `
           ...
           }
           else if (PyString_CheckExact(v) && PyString_CheckExact(w)) {
-            <b>  x = string_concatenate(v, w, f, next_instr); </b>
+            x = string_concatenate(v, w, f, next_instr);
               ...
           }
           ...
