@@ -37,7 +37,7 @@ So, supposing we are executing the example source code inside the main loop of `
           ...
           }
           else if (PyString_CheckExact(v) && PyString_CheckExact(w)) {
-              x = string_concatenate(v, w, f, next_instr);
+              ###x = string_concatenate(v, w, f, next_instr);###
               ...
           }
           ...
@@ -102,6 +102,6 @@ The same macro is executed here but with different arguments as it needs to star
 
 4) `op->ob_sval[size] = '\0'`
 
-At this point the string concatenation is already finished. `op->sval` has the `"string"` value but, as we all know, in the end it's all C under the hood. When we work with C strings we need to follow the C conventions. In this case, putting the `'\0'` character to indicate that the string ends here so that the interpreter can use this value as a regular C string.
+At this point the string concatenation is already finished. `op->sval` has the `"string"` value but, as we all know, in the end it's all C under the hood and when we work with C strings we need to follow the C conventions. In this case, putting the `'\0'` character to indicate that the string ends here so that the interpreter can use this value as a regular C string.
 
 The new object `op` is then returned to the caller and the interpreter eventually gets back to `ceval.c` returning the new string and storing it in `c` as indicated in our python source code.
