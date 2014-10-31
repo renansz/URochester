@@ -37,8 +37,10 @@ So, supposing we are executing the example source code inside the main loop of `
     /* CODE EXECUTED IF the operands are Integers*/
     ...
     }
-    else if (PyString_CheckExact(v) && PyString_CheckExact(w)) {
-      x = string_concatenate(v, w, f, next_instr);
+    else if (PyString_CheckExact(v) && PyString_CheckExact(w)) { 
+    ```
+   ###`   x = string_concatenate(v, w, f, next_instr); `###
+```
         ...
     }
     ...
