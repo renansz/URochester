@@ -1,7 +1,7 @@
 ## Concatenating two strings together with the '+' operator ##
 
   The goal of this tutorial is to show how the Python interpreter (CPython) implements the `+` operator as string concatenation. In order to show that, we will trace the execution of the following python source code through the main loop of the interpreter:
-``` python hl_lines="1 3"
+```python hl_lines="1 3"
 a = 'str'
 b = 'ing'
 c = a + b
