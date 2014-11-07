@@ -2,7 +2,7 @@
 
 ### Python AST Visualization Tool ###
 
-<b>Goal:</b> Make a pytutor alike tool that can show how the AST executes python code.
+<b>Goal:</b> Make a pytutor alike tool that shows step-by-step how Python's interpreter parse the code into AST and executes it.
 
 Ideas:
   - Use a animated graphic representation for the AST generated from a specif compiled code.
