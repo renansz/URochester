@@ -1,4 +1,4 @@
 URochester
 ==========
 
-Computer Assignments of some of the courses of my master's program at UofR
+Some of the programming assignments of my master's program at UofR
