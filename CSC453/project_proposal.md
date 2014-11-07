@@ -8,7 +8,7 @@
 <b> Ideas: </b>
   - Use a animated graphic representation for the AST generated from a specif compiled code.
   - Dinamically generate the tree and the all the steps the compiler take when process it.
-  - Show how the tree contracts/expands as the code is executed.
+  - Show how the tree collapses/expands as the code is executed.
 
 <b> Development: </b>
   - Web app (simulated backend maybe)
