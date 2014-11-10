@@ -15,7 +15,7 @@
   - Based on https://github.com/pgbovine/PythonCompilerWorkbench.
   - Using some animated tree visualization graphic API
     - http://ubietylab.net/ubigraph/ 
-    - google graph API
+    - http://bl.ocks.org/mbostock/4339083
 
 <b> Specific goals (measurement): </b>
   - Make a example of this representation with the algebric expression: `z = x * (y - z)` 
