@@ -19,4 +19,4 @@
 
 <b> Specific goals (measurement): </b>
   - Make a example of this representation with the algebric expression: `z = x * (y - z)` 
-  - Make a video or an test environment that can show the idea and functionalities of this AST visualization web app.
+  - Make a video or a test environment that can show the idea and functionalities of this AST visualization web app.
