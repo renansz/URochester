@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 #this module automatically converts ast to json.
-#So if you want pure AST, this is the best option
+#So if you want pure AST, this is the best option. It needs to be installed from the internet though. It's not a default Python module.
 #from ast2json_modified import ast2json
 import ast
 import json
