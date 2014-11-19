@@ -80,7 +80,7 @@ def parse_ast(node,level):
     return result
 
 
-#generate the collapsed steps (preview)
+#generate the collapsed steps (preview) -- TODO (not working).
 def generate_steps(tree):
     assert type(to_return) == dict
     for n in tree.keys():
