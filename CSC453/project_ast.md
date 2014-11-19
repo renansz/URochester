@@ -50,4 +50,6 @@
   - parses it to a format that the d3.js library can plot as a "collapsible" tree
   - generate the json output from that and save it in a place that my webserver read it as its input data
 - link to the website: http://renansz.no-ip.org:8080/index3.html
+  - It's already collapsible and the step-by-step visualization can be easy done
+  - But.... I need a way to store the intermediate steps (show in class)
    
