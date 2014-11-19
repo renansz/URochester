@@ -4,21 +4,26 @@
 
 <b> What is AST? </b>
   - AST stands for Abstract Syntax Tree. It's basically the tree structure of a python's compiled code. Everytime you run a python code you are actually pre-compiling it in bytecode and then give this bytecode to the interpreter work on it.
-  - The syntax tree is the tree object that generates this byte code.
+  - The syntax tree is the tree object that generates the byte code that the interpreter reads in order to execute the program.
   
 <b> How do I get the AST out of a python source code? </b>
-  - Using the "ast" lib, and then running 'ast.parse(filename.py)
+  - Using the "ast" lib `import ast`,
+  - and then running `ast.parse(filename.py)`
 
-<b> How's the AST structure? </b>
-  - Every node object is a ast.AST object and they can be of many types, such as BinOp, Num, Store, Name, Assign, etc.
-  - There are some generic and specific attributes in each node type
-  - '_fields is a attribute that each concrete class has. This attributes contains the names of all child nodes of the node.
+<b> How does the AST structure look like? </b>
+  - It's a tree structure
+  - Every node object is a `ast.AST` subtype and they can be of many types, such as `BinOp`, `Num`, `Store`, `Name`, `Assign`, etc.
+  - There are <b>generic</b> and <b>specific</b> attributes in each node type
+  - `_fields` is a attribute that each concrete class has. This attribute contains all of the names of a node's children.
+  - `TO-DO`<b>MISSING THE SPECIFIC FIELDS FOR THE TYPES I'M USING</b>
 
-<b> Ideas: </b>
-  - Use a animated graphic representation for the AST generated from a specif compiled code.
-  - Dinamically generate the tree and the all the steps the compiler take when process it.
-  - Show how the tree collapses/expands as the code is executed.
+<b> How to visualize the AST: </b>
+  - Python has a way to visit all the nodes of a AST but has no visualization for it.
+  - This project proposes a way to plot ASTs in an comprehensive way so that people can understand how Python parse their code.
+  - A step-by-step approach would be nice as it can show the sequence of instructions that Python executes in order to get the expected result.
   
+
+#### Implementation ####
 <b> How to generate a AST:</b>
 > Make a web app that shows step-by-step how Python's interpreter parse the code into AST as the code gets executed.
 
@@ -37,3 +42,7 @@
 <b> Specific goals (measurement): </b>
   - Make a example of this representation with the algebric expression: `z = x * (y - z)` 
   - Make a video or a test environment that can show the idea and functionalities of this AST visualization web app.
+
+
+#### What's been done so far ####
+- python code: `tree.py` hosted in github
