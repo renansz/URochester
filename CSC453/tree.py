@@ -43,22 +43,32 @@ def parse_ast(node,level):
     
     #for each node type we're supposed to make little changes to make it matches the
     #expected node format for the lib we're using
+    
+    #ast.Assign
     if type(node) in [ast.Assign]:
         result['name'] += '( = )'
+    
+    #ast.Store, ast.Load, ast.Delete
     if type(node) in [ast.Store,ast.Load,ast.Delete]:
         pass 
+    
+    #ast.Name
     if isinstance(node,ast.Name):
         result['name'] += ' = ' + str(node.id)
+    
+    #ast.BinOp
     if isinstance(node,ast.BinOp):
         #include a fiekd with the 'result' to show when collapsed
         result['collapsed'] = 'null'
         pass
-    #BinOp arguments "op" types
+    
+    #BinOp arguments "op" types --> operators dictionary
     if type(node) in operators.keys():
         result['name'] = operators[type(node)] + ' (%s)'%result['name']
         result['color'] = 'red'
     if type(node) in [ast.Num]:
         result['name'] += ' = ' + str(node.n)
+    
     #keeping track of position to be able to "preview" BinOp expressions 
     if 'left' in node._fields:
         result['position'] = 'left'
