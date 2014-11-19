@@ -33,11 +33,10 @@
   - Show how the tree collapses/expands as the code is executed.
 
 <b> Implementation Details: </b>
-  - Web app (simulated backend maybe)
+  - Web app (simulated backend maybe, just hosting a page)
   - Based on https://github.com/pgbovine/PythonCompilerWorkbench.
   - Using some animated tree visualization graphic API
-    - http://ubietylab.net/ubigraph/ 
-    - http://bl.ocks.org/mbostock/4339083
+    - http://bl.ocks.org/mbostock/4339083 (d3.js library)
 
 <b> Specific goals (measurement): </b>
   - Make a example of this representation with the algebric expression: `z = x * (y - z)` 
