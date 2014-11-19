@@ -23,7 +23,7 @@
   - A step-by-step approach would be nice as it can show the sequence of instructions that Python executes in order to get the expected result.
   
 
-#### Implementation ####
+#### Proposal ####
 <b> How to generate a AST:</b>
 > Make a web app that shows step-by-step how Python's interpreter parse the code into AST as the code gets executed.
 
