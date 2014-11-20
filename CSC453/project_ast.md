@@ -1,3 +1,7 @@
+>This blog post is about Python's AST and how one can visualize it in order to improve the understanding of the internals of Python interpreter.
+>First I want to talk a little bit about the AST itself giving you some concepts and definitions and then show you the motivation for this project as well as the implementation process and the actual code.
+>Hopefully there will be a live demo when I finish this post, so you can test and see what I am talking about here.
+
 ### Python's AST Basics ###
 
 <b> What is AST? </b>
