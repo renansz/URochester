@@ -1,5 +1,3 @@
-## Python AST Visualization Tool ##
-
 ### Python's AST Basics ###
 
 <b> What is AST? </b>
@@ -21,7 +19,11 @@
   - Python has a way to visit all the nodes of a AST but has no visualization for it.
   - This project proposes a way to plot ASTs in an comprehensive way so that people can understand how Python parse their code.
   - A step-by-step approach would be nice as it can show the sequence of instructions that Python executes in order to get the expected result.
+
+> The "how to visualize AST" topic gives us an ideia of how not trivial it is to start working with the Python's parsing tree. This is the motivation of this project.
   
+## Python AST Visualization Tool ##
+> This project aims to help students visualizing the AST strucutre of a python code using a web interface.
 
 #### Proposal ####
 <b> How to generate a AST:</b>
@@ -45,10 +47,20 @@
 
 #### What's been done so far ####
 - python code: `tree.py` hosted in github
-  - this program generates the AST,
-  - parses it to a format that the d3.js library can plot as a "collapsible" tree
-  - generate the json output from that and save it in a place that my webserver read it as its input data
+  - this program generates the `AST`,
+  - parses it to a format that the `d3.js` library can plot as a "collapsible" tree
+  - generate the `JSON` output from a given input and save it in a place that my webserver reads it as its input data
+  - the webpage then just renders it making use of the `d3.js` tree visualization type.
 - link to the website: http://renansz.no-ip.org:8080/index3.html
-  - It's already collapsible and the step-by-step visualization can be easy done
-  - But.... I need a way to store the intermediate steps (show in class)
+  - It's already collapsible/expandable and the step-by-step visualization can be easily done.
    
+#### Next steps ####
+- The expand/collapse actions are working but not as I intended to.
+- I need to recursively walk through all the nodes in the same sequence as the python byte code generator in order to get the intermediate results right.
+  - Ex: `x + ( y + z )`
+    - The deepest `BinOp` node should display `y + z` when collapsed and the parent BinOp should display `x + ( y + z )` when collapsed.
+    - When expanded they all should display their "ast" type as their labels.
+    - I want to do the same with all the `Store`, `Load`, `Assign`, etc codes, but I think they will be easy when the `BinOps` were done.
+  - Make sure that the interface is dumb. Don't put logic on javascript (maybe just the expanded/collapsed conditions)
+  - Use assertions on the code to verify the steps and also make it easier to implement future `ast` types
+  - The initial state should be all expanded.
