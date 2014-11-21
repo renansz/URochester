@@ -29,7 +29,7 @@
 ## Python AST Visualization Tool ##
 > This project aims to help students visualizing the AST strucutre of a python code using a web interface.
 
-#### Proposal ####
+#### Proposal (Blog Post 1) ####
 <b> How to generate a AST:</b>
 > Make a web app that shows step-by-step how Python's interpreter parse the code into AST as the code gets executed.
 
@@ -49,10 +49,12 @@
   - Make a video or a test environment that can show the idea and functionalities of this AST visualization web app.
 
 
-#### What's been done so far ####
+#### What's been done so far  (Blog Post 2) ####
 - python code: `tree.py` hosted in github
   - this program generates the `AST`,
   - parses it to a format that the `d3.js` library can plot as a "collapsible" tree
+    - the basic node tree is strctured as: {name: root, children: [{name: node1},{name: node2}]}
+    - to parse the regular `AST` to the `d3.js` format we need to rename the node properties using basically these two attributes: name and children.
   - generate the `JSON` output from a given input and save it in a place that my webserver reads it as its input data
   - the webpage then just renders it making use of the `d3.js` tree visualization type.
 - link to the website: http://renansz.no-ip.org:8080/index3.html
