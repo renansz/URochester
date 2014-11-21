@@ -67,6 +67,7 @@
     - The deepest `BinOp` node should display `y + z` when collapsed and the parent BinOp should display `x + ( y + z )` when collapsed.
     - When expanded they all should display their "ast" type as their labels.
     - I want to do the same with all the `Store`, `Load`, `Assign`, etc codes, but I think they will be easy when the `BinOps` were done.
-  - Make sure that the interface is dumb. Don't put logic on javascript (maybe just the expanded/collapsed conditions)
-  - Use assertions on the code to verify the steps and also make it easier to implement future `ast` types
-  - The initial state should be all expanded.
+- Make sure that the interface is dumb. Don't put logic on javascript (maybe just the expanded/collapsed conditions)
+- Use assertions on the code to verify the steps and also make it easier to implement future `ast` types
+- The initial state should be all expanded.
+- Use a web framework (Flask probably) to host the app and make it possible to users to input their own code.
