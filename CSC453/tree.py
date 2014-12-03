@@ -1,14 +1,13 @@
 #!/usr/bin/python
 
-#this module automatically converts ast to json.
-#So if you want pure AST, this is the best option. It needs to be installed from the internet though. It's not a default Python module.
-#from ast2json_modified import ast2json
 import ast
 import json
 from flask import Flask,render_template,request,session
 from wtforms import TextField,validators
 from flask_wtf import Form
 from flask_bootstrap import Bootstrap
+
+#Flask config
 app = Flask(__name__)
 app.secret_key = 'abc'
 Bootstrap(app)
@@ -34,8 +33,8 @@ def parse_ast(node,level):
     
     #first thing is to make sure that node is a AST subtype 
     assert isinstance(node, ast.AST)
-    node_dict = parse_node(node,level)  #create a dict representing the  node 
-    level = level + 1 #increasing the tree level before visiting children nodes
+    node_dict = parse_node(node,level) #create a dict representing the node 
+    level = level + 1 #increasing tree level before visiting children nodes
     
     children = [] #create a list to put the children nodes if there is any
     for n in ast.iter_child_nodes(node):
@@ -43,7 +42,7 @@ def parse_ast(node,level):
         #_node['parent'] = node_dict
         children.append(_node)
     
-    #append the children list to the result dict if there is at least one child
+    #append the children list to the result if there is at least one child
     if children:
         assert children != [] 
         node_dict['children'] = children
@@ -121,19 +120,6 @@ def parse_BinOp(x):
         result += str(right.n) if isinstance (right,ast.Num) else right.id
 
     return result
-
-def get_max_level(tree):
-    max_level = 0
-    for k in tree.keys():
-        #recursion on children nodes
-        if k == 'children':
-            for c in tree[k]:
-                assert type(c) == dict
-                max_level = max(max_level,get_max_level(c))
-        #return the level value
-        if k == 'level':
-            max_level = max(max_level,tree[k])
-    return max_level
 
 #Flask part
 class CodeForm(Form):
