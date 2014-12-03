@@ -80,6 +80,11 @@
   - Onitial state is all expanded
   - Using flask to implement the user interactivity
     - Using sessions to store the current code (not sure if it's the best way)
+  - Bootstrap for the html code (bootstrap-flask)
+  - Virtualenv to keep track of the currently needed packages
+    - flask
+    - flask-wtf (forms)
+    - flask-bootstrap
 
 ### Next steps ###
   - Describe better the solution (and what is not sufficient generic)
