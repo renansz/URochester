@@ -5,12 +5,15 @@
 #from ast2json_modified import ast2json
 import ast
 import json
+from flask import Flask,render_template,request,session
+from wtforms import TextField,validators
+from flask_wtf import Form
+from flask_bootstrap import Bootstrap
+app = Flask(__name__)
+app.secret_key = 'abc'
+Bootstrap(app)
 
 DEBUG = False
-to_return = {}
-
-to_return['body'] = {}
-
 #TODO
 # implement one node parse per type in order to parse the tree correctly 
 # as there's no other way to figure out how many children each node has.
@@ -25,28 +28,41 @@ operators = {ast.Add: '+',ast.Sub: '-',ast.Mult: '*',ast.Div: '/',ast.FloorDiv: 
 #main parsing function
 def parse_ast(node,level):
     """This function is called recursively keeping track of its current depth
-    Returns a dictionary containing the ast structure modified to match
-    the JS library that will render the tree. Which means that the representation
-    IS NOT the original AST, it's a modified version of it """
+    Returns a dictionary containing the ast structure modified to match the
+    d3.js library that will render the tree. Which means that the rendered tree
+    IS NOT exactly the original AST, it's a slightly modified version of it"""
     
     #first thing is to make sure that node is a AST subtype 
     assert isinstance(node, ast.AST)
-    #debugging: print the tree path with node type and current level
-    if DEBUG: 
-        print node.__class__.__name__ + ' - Node-level: ' + str(level) + ' Instance: ' + str(type(node))
+    node_dict = parse_node(node,level)  #create a dict representing the  node 
+    level = level + 1 #increasing the tree level before visiting children nodes
     
+    children = [] #create a list to put the children nodes if there is any
+    for n in ast.iter_child_nodes(node):
+        _node = parse_ast(n,level)
+        #_node['parent'] = node_dict
+        children.append(_node)
     
-    result = {} #create a dict representing the current node 
-    result['name'] = node.__class__.__name__ #gets the "name" of the Node
-    result['level']= level #keeping track of the tree level
-    #result['size'] = 5000/(level+1) #attribute used by the JS lib. not using it yet.
-    
-    #for each node type we're supposed to make little changes to make it matches the
-    #expected node format for the lib we're using
+    #append the children list to the result dict if there is at least one child
+    if children:
+        assert children != [] 
+        node_dict['children'] = children
+        if DEBUG:
+            print children
+    return node_dict
+
+
+def parse_node(node,level):
+    node_dict = {}
+    node_dict['name'] = node.__class__.__name__ #gets the "name" of the Node
+    node_dict['level']= level #keeping track of the tree level
+    node_dict['type'] = node.__class__.__name__
+    #for each node type we're supposed to make little changes to make it matches
+    #the expected node format for the lib we're using to render it (d3.js)
     
     #ast.Assign
     if type(node) in [ast.Assign]:
-        result['name'] += '( = )'
+        node_dict['name'] += '( = )'
     
     #ast.Store, ast.Load, ast.Delete
     if type(node) in [ast.Store,ast.Load,ast.Delete]:
@@ -54,71 +70,95 @@ def parse_ast(node,level):
     
     #ast.Name
     if isinstance(node,ast.Name):
-        result['name'] += ' = ' + str(node.id)
+        node_dict['name'] += ' = ' + str(node.id)
     
     #ast.BinOp
     if isinstance(node,ast.BinOp):
         #include a fiekd with the 'result' to show when collapsed
-        result['collapsed'] = 'null'
-        pass
+        node_dict['collapsed'] = parse_BinOp(node)
     
     #BinOp arguments "op" types --> operators dictionary
     if type(node) in operators.keys():
-        result['name'] = operators[type(node)] + ' (%s)'%result['name']
-        result['color'] = 'red'
+        node_dict['name'] = operators[type(node)] + ' (%s)'%node_dict['name']
     if type(node) in [ast.Num]:
-        result['name'] += ' = ' + str(node.n)
+        node_dict['name'] += ' = ' + str(node.n)
     
     #keeping track of position to be able to "preview" BinOp expressions 
     if 'left' in node._fields:
-        result['position'] = 'left'
+        node_dict['position'] = 'left'
     if 'right' in node._fields:
-        result['position'] = 'right'
+        node_dict['position'] = 'right'
+
+    return node_dict
+
+
+def parse_BinOp(x):
+    """ Every BinOp has exactly tree children: left, op & right
+    The idea here is to use the ast built-in iterator to get them
+    in order and make the string that represents the current node
+    collapsed """
+    result = '' 
+    iterBinOp = ast.iter_child_nodes(x)
+
+    #left operand 
+    left = iterBinOp.next()
+    if isinstance(left,ast.BinOp):
+        left = parse_BinOp(left)
+        result += left
+    else:
+        result += str(left.n) if isinstance (left,ast.Num) else left.id
     
-    level = level + 1 #increasing the tree level before visiting children nodes
+    #operator
+    op = iterBinOp.next()
+    result += ' ' + operators[type(op)] + ' '
     
-    children = [] #create a list to put the children nodes if there is any
-    for n in ast.iter_child_nodes(node):
-        children.append(parse_ast(n,level)) #this is the recursive call over all the node's children
-    
-    #append the children list to the result dict if there is at least one child
-    if children:
-        assert children != [] 
-        result['children'] = children
-        if DEBUG:
-            print children
+    #right operand 
+    right = iterBinOp.next()
+    if isinstance(right,ast.BinOp):
+        right = parse_BinOp(right)
+        result += right 
+    else:
+        result += str(right.n) if isinstance (right,ast.Num) else right.id
+
     return result
 
+def get_max_level(tree):
+    max_level = 0
+    for k in tree.keys():
+        #recursion on children nodes
+        if k == 'children':
+            for c in tree[k]:
+                assert type(c) == dict
+                max_level = max(max_level,get_max_level(c))
+        #return the level value
+        if k == 'level':
+            max_level = max(max_level,tree[k])
+    return max_level
 
-#generate the collapsed steps (preview) -- TODO (not working).
-def generate_steps(tree):
-    assert type(to_return) == dict
-    for n in tree.keys():
-        #children are lists. we need to call it recursively
-        if n == 'children':
-            for _n in tree[n]:
-                generate_steps(_n)
-        #when find part of algebric expression, put it on 'collapsed' attribute (parent)
-        elif n == 'position':
-            if tree[n] == 'right':
-                tree['collapsed'] += tree['name']
-            if tree[n] == 'left':
-                pass 
-            tree['collapsed'] 
-            print tree 
-            return tree[n]
-            
-    if DEBUG:
-        return tree
+#Flask part
+class CodeForm(Form):
+    code = TextField('source')
 
+@app.route('/',methods=['GET','POST'])
+def index(name=None):
+    form = CodeForm()
+    #first usage - initial content
+    if isinstance(form.code.data,type(None)):
+        form.code.data = 'z = x * (y - z)'
+        session['code'] = form.code.data
+    else:
+        session['code'] = form.code.data 
+    return render_template('index.html',name=name,form=form)
+    #return render_template('base.html',name=name,form=form)
 
+@app.route('/get_ast')
+def get_ast(name=None):
+    assert session.has_key('code')
+    code = ast.parse(session['code'])
+    #TODO: assertions to verifiy for valid code
+    return json.dumps(parse_ast(code,0))
 
-#call the parse function on the example code 
-#c = ast.parse('x = 2 + 3') #test-case 1
-c = ast.parse('z = x * (y -z)') #test-case 2
-
-to_return =  parse_ast(c,0) #making root = level 0
-
-print generate_steps(to_return)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0',debug=True)
 
 
