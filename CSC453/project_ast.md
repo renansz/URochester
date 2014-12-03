@@ -71,3 +71,17 @@
 - Use assertions on the code to verify the steps and also make it easier to implement future `ast` types
 - The initial state should be all expanded.
 - Use a web framework (Flask probably) to host the app and make it possible to users to input their own code.
+
+### 11/3 Update ###
+  - Expand/collapse working
+  - Intermediate results almost done
+  - Removed all the logic from the interface
+  - Some assertions that saved me a couple of hours ;)
+  - Onitial state is all expanded
+  - Using flask to implement the user interactivity
+    - Using sessions to store the current code (not sure if it's the best way)
+
+### Next steps ###
+  - Describe better the solution (and what is not sufficient generic)
+  - Improve the interface (fonts, sizes, colors, etc)
+  - Write this follow up text in a more blogpost way?
