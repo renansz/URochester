@@ -154,7 +154,8 @@ def parse_Assign_Expr(node,children):
             elif c.has_key('n'):
                 collapsed = c['n']
     return collapsed
-#Flask part
+
+########### Flask part ###########
 class CodeForm(Form):
     code = StringField(u'source',widget=TextArea())
 
