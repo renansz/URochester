@@ -5,8 +5,8 @@
   <h1>Ast Visualizer</h1>
   <form class="form form-horizontal" method="post" role="form" action=/>
       {{ wtf.form_errors(form, hiddens="only") }}
-      {{ wtf.form_field(form.code) }}
-      <input type="submit" value="Go" id="refresh">
+      {{ wtf.form_field(form.code,cols=20,rows=10) }}
+      <button type="submit" class="btn btn-primary">Render AST</button>
   </form>
 </div>
 {% endblock %}
