@@ -6,11 +6,12 @@
 
 <b> What is AST? </b>
   - AST stands for Abstract Syntax Tree. It's basically the tree structure of a python's compiled code. Everytime you run a python code you are actually pre-compiling it in bytecode and then give this bytecode to the interpreter work on it.
-  - The syntax tree is the tree object that generates the byte code that the interpreter reads in order to execute the program.
+  - The syntax tree is object that represents your code abstractly and Python uses it generate byte code so that the interpreter can execute the program.
+  - It's a parsing step: AST converts python code into abstract tree structures (useful to convert source codes to another programming language)
   
 <b> How do I get the AST out of a python source code? </b>
   - Using the "ast" lib `import ast`,
-  - and then running `ast.parse(filename.py)`
+  - and then running `ast.parse(filename.py)` or `ast.parse('x = 1 + 2')`
 
 <b> How does the AST structure look like? </b>
   - It's a tree structure
