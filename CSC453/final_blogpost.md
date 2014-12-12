@@ -29,7 +29,7 @@
 ## Python AST Visualization Tool ##
 > This project aims to help students visualizing the AST strucutre of a python code using a web interface.
 
-#### Proposal (Blog Post 1) ####
+#### Proposal (Blog Post 1) - 10/7/2014 ####
 <b> How to generate a AST:</b>
 > Make a web app that shows step-by-step how Python's interpreter parse the code into AST as the code gets executed.
 
@@ -49,7 +49,7 @@
   - Make a video or a test environment that can show the idea and functionalities of this AST visualization web app.
 
 
-#### What's been done so far  (Blog Post 2 - midterm) ####
+#### What's been done so far  (Blog Post 2 - midterm) - 11/21/2014 ####
 - python code: `tree.py` hosted in github
   - this program generates the `AST`,
   - parses it to a format that the `d3.js` library can plot as a "collapsible" tree
@@ -72,7 +72,7 @@
 - The initial state should be all expanded.
 - Use a web framework (Flask probably) to host the app and make it possible to users to input their own code.
 
-### 11/3 Update -- Implementation Details ###
+####  Implementation Details ####
   - Expand/collapse working - expect for the content.
   - Intermediate results almost done
   - Removed all the logic from the interface
@@ -86,11 +86,11 @@
     - `flask-wtf` (forms)
     - `flask-bootstrap`
 
-### 12/8 Update ###
+### Final Blogpost - 12/8 Update ###
+  - Presentation: https://docs.google.com/presentation/d/1I3znbhjdUlVsw7EuosGut7qWtXG1lTQWE4dnwmTyZ3M/edit#slide=id.p
+  - Final Source code: `tree.py` (in this github page)
+  - Flask assets in subfolders.
   - Collapsible steps (content) for Assign, Expr and BinOp.
   - Code correction/cleaning
   - Write this follow up text in a more blogpost way/presentation.
 
-### Final Update ###
-  - Presentation: https://docs.google.com/presentation/d/1I3znbhjdUlVsw7EuosGut7qWtXG1lTQWE4dnwmTyZ3M/edit#slide=id.p
-  - Source code: `tree.py`
