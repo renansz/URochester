@@ -23,6 +23,7 @@ assert(typeof(svg) == "object","graphic placeholder not generated");
 
 d3.json('/get_ast', function(error, ast) {
     assert(typeof(ast) == "object", "JSON query didn't return a object");
+    console.log(ast);
     root = ast;
     root.y0 = height / 2;
     root.x0 = 0;
@@ -70,7 +71,7 @@ function update(source) {
       .attr("x", function(d) { return -rectSize/2 ; })
       .attr("dy", ".15em")
       .attr("text-anchor", "right")
-      .text(function(d) { console.log("text: "+ d.name);return d.name; })
+      .text(function(d) { return d.name; })
       .style("fill-opacity", 1e-6);
 
   //Toggling collapsed and open form
